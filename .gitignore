@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/
@@ -163,7 +163,7 @@ cython_debug/
 # dependencies
 frontend/node_modules
 frontend/.pnp
-frontend.pnp.js
+frontend/.pnp.js
 frontend/.yarn
 
 # next.js
@@ -174,4 +174,4 @@ frontend/out/
 frontend/build
 
 # vercel
-frontend.vercel
+frontend/.vercel
