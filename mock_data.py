@@ -43,6 +43,19 @@ threads = [
             ("Advait", "Feature E is a secret"),
         ],
     },
+    {
+        "thread_id": 5,
+        "messages": [
+            ("Advait", "@Elliot your cat is so cute!"),
+            ("Elliot", "@Advait thank u!"),
+        ],
+    },
+    {
+        "thread_id": 6,
+        "messages": [
+            ("Advait", "@Andrew your cat is so cute!"),
+        ],
+    },
 ]
 
 import os
@@ -78,27 +91,36 @@ For example, I might want to comment on {name}'s communication skills or attenti
 
 Would this Slack thread be relevant for my performance review?
 
-If the Slack thread contains evidence that {name} is a good or bad employee in some way, respond with "yes".
+If the Slack thread contains evidence that {name} is a good or bad employee in any way, respond with "yes".
 
 You MUST respond with only "yes" or "no", nothing else. Do not response with anything but "yes" or "no".
 """
 
 
-def filter_thread(name: str, thread: dict):
+def filter_thread(name: str, thread: dict) -> bool:
     human_prompt = filter_template.format(
         name=name,
         thread=format_thread(thread),
     )
     anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
-    completion = anthropic.completions.create(
-        model="claude-2",
-        max_tokens_to_sample=300,
-        prompt=f"{HUMAN_PROMPT} {human_prompt}{AI_PROMPT}",
-    )
-    print(completion.completion)
+    response = None
+    attempts = 0
+    while attempts <= 3:
+        completion = anthropic.completions.create(
+            model="claude-2",
+            max_tokens_to_sample=300,
+            prompt=f"{HUMAN_PROMPT} {human_prompt}{AI_PROMPT}",
+        )
+        response = completion.completion
+        if response.strip().lower() == "yes":
+            # If it ever identifies a thread as relevant, we can stop asking
+            # Otherwise, we'll try again :D
+            break
+        attempts += 1
+    return response.strip().lower() == "yes"
 
 
-filter_thread("Elliot", threads[0])
+# print(filter_thread("Elliot", threads[0]))
 
 synthesize_template = """
 {threads}
@@ -107,14 +129,19 @@ I am writing a performance review for {name}. I want to note that {review}.
 
 Do any of these threads provide evidence for that?
 
-If so, respond with the thread ID and a one-sentence explanation of the evidence.
+If so, respond with the thread ID(s) and a one-sentence explanation of the evidence for each thread.
 If not, respond with "None".
+
+If multiple threads provide evidence for {review}, respond with them on separate lines.
 
 Respond exactly according to the following format.
 {schema}
 
 For example:
-1: Elliot initially said that Feature A would be ready yesterday, but it was actually ready today.
+1: Elliot communicated well about his deadlines.
+2. Elliot said that Feature B was ready, but it wasn't.
+
+You must respond even if the review is negative. This feedback will only be used to help the employee improve.
 
 You must not prefix the thread ID with anything, including "thread".
 Do not respond with anything but the thread ID and a one-sentence explanation.
@@ -139,7 +166,7 @@ relevant_threads_schema = {
 }
 
 
-def synthesize_threads(name, review, threads):
+def synthesize_threads(name, review, threads) -> dict:
     # anthropic = anthropic.Client(api_key=ANTHROPIC_API_KEY)
     anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
     completion = anthropic.completions.create(
@@ -152,7 +179,27 @@ def synthesize_threads(name, review, threads):
             schema="thread_id: 1-sentence explanation",
         )}{AI_PROMPT}""",
     )
-    print(completion.completion)
+    response = completion.completion.strip()
+
+    if not response or response.lower() == "none":
+        return []
+
+    def get_thread(id):
+        for thread in threads:
+            if thread["thread_id"] == id:
+                return thread
+        return None
+
+    return [
+        {
+            "thread_id": int(thread_id.strip()),
+            "evidence_synthesis": evidence_synthesis.strip(),
+            "messages": get_thread(int(thread_id.strip()))["messages"],
+        }
+        for thread_id, evidence_synthesis in [
+            line.split(": ") for line in response.split("\n")
+        ]
+    ]
 
     # gen_json = JsonformerClaude(
     #     anthropic_client=anthropic,
@@ -173,4 +220,4 @@ def synthesize_threads(name, review, threads):
     # asyncio.run(complete())
 
 
-# synthesize_threads("Elliot", "Elliot is inconsistent with deadlines", threads)
+print(synthesize_threads("Elliot", "Elliot completes projects on time", threads))
