@@ -1,0 +1,7 @@
+modal-client==0.51.3192
+cohere==4.21
+python-dotenv==1.0.0
+
+# Local
+black
+isort
