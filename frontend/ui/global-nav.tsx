@@ -1,6 +1,6 @@
 'use client';
 
-import { demos, type Item } from '#/lib/demos';
+import { type User } from '#/lib/demos';
 import { NextLogo } from '#/ui/next-logo';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
@@ -8,6 +8,35 @@ import { MenuAlt2Icon, XIcon } from '@heroicons/react/solid';
 import clsx from 'clsx';
 import { useState } from 'react';
 import Byline from './byline';
+
+const users: { name: string }[] = [
+  {
+    name: 'Advait Maybhate',
+  },
+  {
+    name: 'Elliot Klein',
+  },
+  {
+    name: 'Terrorist AI',
+  },
+  {
+    name: 'Palantir AI',
+  },
+  {
+    name: 'John',
+  },
+  {
+    name: 'Sarah',
+  },
+  {
+    name: 'David',
+  },
+  {
+    name: 'Jessica',
+  },
+];
+
+const nameToSlug = (name: string) => name.toLowerCase().split(' ').join('-');
 
 export function GlobalNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +55,7 @@ export function GlobalNav() {
           </div>
 
           <h3 className="font-semibold tracking-wide text-gray-400 group-hover:text-gray-50">
-            App Router
+            Performance AI
           </h3>
         </Link>
       </div>
@@ -47,27 +76,25 @@ export function GlobalNav() {
 
       <div
         className={clsx('overflow-y-auto lg:static lg:block', {
-          'fixed inset-x-0 bottom-0 top-14 mt-px bg-black': isOpen,
+          'inst-x-0 fixed bottom-0 top-14 mt-px bg-black': isOpen,
           hidden: !isOpen,
         })}
       >
-        <nav className="space-y-6 px-2 pb-24 pt-5">
-          {demos.map((section) => {
+        <nav className="space-y-1 px-2 pb-24 pt-5">
+          <div className="text-md mb-2 px-3 font-semibold uppercase tracking-wider text-gray-400/80">
+            <div>People</div>
+          </div>
+          {/* TODO: Pull users */}
+          {users.map((user) => {
+            const slug = nameToSlug(user.name);
             return (
-              <div key={section.name}>
-                <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400/80">
-                  <div>{section.name}</div>
-                </div>
-
-                <div className="space-y-1">
-                  {section.items.map((item) => (
-                    <GlobalNavItem key={item.slug} item={item} close={close} />
-                  ))}
-                </div>
+              <div key={user.name}>
+                <GlobalNavItem key={slug} item={user} close={close} />
               </div>
             );
           })}
         </nav>
+
         <Byline className="absolute hidden sm:block" />
       </div>
     </div>
@@ -78,16 +105,19 @@ function GlobalNavItem({
   item,
   close,
 }: {
-  item: Item;
+  item: User;
   close: () => false | void;
 }) {
   const segment = useSelectedLayoutSegment();
-  const isActive = item.slug === segment;
+  console.log({ segment });
+  const slug = nameToSlug(item.name);
+  const isActive = slug === segment;
+  const route = `/people/${slug}`;
 
   return (
     <Link
       onClick={close}
-      href={`/${item.slug}`}
+      href={route}
       className={clsx(
         'block rounded-md px-3 py-2 text-sm font-medium hover:text-gray-300',
         {
