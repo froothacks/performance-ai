@@ -171,7 +171,7 @@ def synthesize_threads(name, review, threads) -> dict:
 
     return [
         {
-            "thread_id": int(thread_id.strip()),
+            "thread_id": str(thread_id.strip()),
             "evidence_synthesis": evidence_synthesis.strip(),
         }
         for thread_id, evidence_synthesis in [
@@ -199,7 +199,7 @@ relevant_threads_schema = {
 }
 
 
-def synthesize_threads_jsonformer(name, review, threads) -> dict:
+def synthesize_threads_jsonformer(name, review, threads):
     anthropic = Client(api_key=ANTHROPIC_API_KEY)
     gen_json = JsonformerClaude(
         anthropic_client=anthropic,
@@ -215,11 +215,11 @@ def synthesize_threads_jsonformer(name, review, threads) -> dict:
     async def complete():
         return await gen_json()
 
-    return asyncio.run(complete())["threads"]
+    return complete()
 
 
-print(
-    synthesize_threads_jsonformer(
-        "Elliot", "Elliot isn't good at keeping company secrets", threads
-    )
-)
+# print(
+#     synthesize_threads_jsonformer(
+#         "Elliot", "Elliot isn't good at keeping company secrets", threads
+#     )
+# )
