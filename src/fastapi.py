@@ -8,7 +8,7 @@ from fastapi import APIRouter, Request
 from modal import web_endpoint
 from pydantic import BaseModel
 
-from .llm import synthesize_threads_jsonformer, filter_thread
+from .llm import synthesize_threads, filter_thread
 from .config import modal_stub, slack_client, db, co, image
 
 
@@ -224,7 +224,7 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
     user_name = next(x["name"] for x in users["members"] if x["id"] == user_id)
     if not recs:
         return []
-    summary = await synthesize_threads_jsonformer(
+    summary = await synthesize_threads(
         user_name,
         prompt,
         [
