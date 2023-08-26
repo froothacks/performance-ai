@@ -8,6 +8,7 @@ pymongo
 slack_sdk==3.21.3
 jinja2
 uvicorn
+asgiref
 
 # Local
 black
