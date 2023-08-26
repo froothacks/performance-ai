@@ -10,30 +10,15 @@ export default function Byline({ className }: { className: string }) {
           <div className="text-sm text-gray-400">By</div>
           <a href="https://vercel.com" title="Vercel">
             <div className="w-16 text-gray-100 hover:text-gray-50">
-              <VercelLogo />
+              Froothacks
             </div>
           </a>
         </div>
 
-        <div className="text-sm text-gray-400">
-          <a
-            className="underline decoration-dotted underline-offset-4 transition-colors hover:text-gray-300"
-            href="https://github.com/vercel/app-playground"
-            target="_blank"
-            rel="noreferrer"
-          >
-            View code
-          </a>
-          {' or '}
-          <a
-            className="underline decoration-dotted underline-offset-4 transition-colors hover:text-gray-300"
-            href="https://vercel.com/templates/next.js/app-directory"
-            target="_blank"
-            rel="noreferrer"
-          >
-            deploy your own
-          </a>
-        </div>
+        <div className="text-sm text-gray-400">Advait Maybhate</div>
+        <div className="text-sm text-gray-400">Andrew Wang</div>
+        <div className="text-sm text-gray-400">Elliot Klein</div>
+        <div className="text-sm text-gray-400">Steven Xu</div>
       </div>
     </div>
   );
