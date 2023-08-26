@@ -9,6 +9,11 @@ slack_sdk==3.21.3
 jinja2
 uvicorn
 asgiref
+numpy
+anthropic==0.2.9
+
+# jsonformer_claude
+termcolor
 
 # Local
 black
