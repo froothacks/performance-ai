@@ -71,8 +71,9 @@ async def get_slack_users():
     return data
 
 
-@router.get("/all-users")
-async def get_all_users() -> list[User]:
+@modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
+@web_endpoint(method="GET")
+async def all_users() -> list[User]:
     """Gets all slack users
     https://api.slack.com/methods/users.list
     """
@@ -112,7 +113,8 @@ def average_embeddings(
     return chunk_embeddings.tolist()
 
 
-@router.post("/slack-webhook")
+@modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
+@web_endpoint(method="POST")
 async def slack_webhook(request: Request):
     """
     Processes Slack messages and stores in MongoDB
@@ -190,7 +192,6 @@ class ThreadQueryResp(BaseModel):
     thread_link: str
 
 
-# @router.post("/query-threads")
 @modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
 @web_endpoint(method="POST")
 async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
