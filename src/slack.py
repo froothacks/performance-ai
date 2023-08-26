@@ -2,6 +2,16 @@ import os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 import pprint
+
+
+"""
+TODO Incoming webhooks
+- Save the incoming messages and store in list[list[str]]. Embed the
+messages and find average embedding
+"""
+
+# Docs https://slack.dev/python-slack-sdk/api-docs/slack_sdk/
+
 pp = pprint.PrettyPrinter(indent=2)
 
 client = WebClient(token=os.environ['SLACK_BOT_TOKEN'])
@@ -36,5 +46,3 @@ try:
 
 except SlackApiError as e:
     logger.error("Error creating conversation: {}".format(e))
-
-
