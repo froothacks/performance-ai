@@ -1,38 +1,36 @@
 'use client';
 
-import { type User } from '#/lib/demos';
 import { NextLogo } from '#/ui/next-logo';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import { MenuAlt2Icon, XIcon } from '@heroicons/react/solid';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TeamCard from './team-card';
+import { getUsers } from '#/app/api/users/getUsers';
+import { User } from '#/app/api/users/user';
+import { useUserProvider } from '#/app/contexts/user-context';
 
-const users: { name: string }[] = [
-  {
-    name: 'Advait Maybhate',
-  },
-  {
-    name: 'Elliot Klein',
-  },
-  {
-    name: 'Terrorist AI',
-  },
-  {
-    name: 'Palantir AI',
-  },
+const TEST_USERS: User[] = [
   {
     name: 'John',
+    id: 1,
+    profile_pic: '',
   },
   {
     name: 'Sarah',
+    id: 1,
+    profile_pic: '',
   },
   {
     name: 'David',
+    id: 1,
+    profile_pic: '',
   },
   {
     name: 'Jessica',
+    id: 1,
+    profile_pic: '',
   },
 ];
 
@@ -41,6 +39,18 @@ const nameToSlug = (name: string) => name.toLowerCase().split(' ').join('-');
 export function GlobalNav() {
   const [isOpen, setIsOpen] = useState(false);
   const close = () => setIsOpen(false);
+
+  const [users, setUsers] = useUserProvider();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      // const data = await getUsers();
+      // setUsers(data);
+
+      setUsers(TEST_USERS);
+    };
+    fetchUsers();
+  }, []);
 
   return (
     <div className="fixed top-0 z-10 flex w-full flex-col border-b border-gray-800 bg-black lg:bottom-0 lg:z-auto lg:w-72 lg:border-b-0 lg:border-r lg:border-gray-800">
@@ -84,7 +94,7 @@ export function GlobalNav() {
           <div className="text-md mb-2 px-3 font-semibold uppercase tracking-wider text-gray-400/80">
             <div>People</div>
           </div>
-          {/* TODO: Pull users */}
+
           {users.map((user) => {
             const slug = nameToSlug(user.name);
             return (

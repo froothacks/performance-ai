@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import type { Review } from './review';
+import { BACKEND_URL } from '../utils';
+import { User } from './user';
 
 // `server-only` guarantees any modules that import code in file
 // will never run on the client. Even though this particular api
@@ -7,20 +8,20 @@ import type { Review } from './review';
 // good practise to add `server-only` preemptively.
 import 'server-only';
 
-export async function getReviews() {
-  const res = await fetch(`https://app-router-api.vercel.app/api/reviews`);
+export async function getUsers() {
+  const res = await fetch(`${BACKEND_URL}/all-users`);
 
   if (!res.ok) {
     // Render the closest `error.js` Error Boundary
     throw new Error('Something went wrong!');
   }
 
-  const reviews = (await res.json()) as Review[];
+  const users = (await res.json()) as User[];
 
-  if (reviews.length === 0) {
+  if (users.length === 0) {
     // Render the closest `not-found.js` Error Boundary
     notFound();
   }
 
-  return reviews;
+  return users;
 }
