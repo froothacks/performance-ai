@@ -1,0 +1,1 @@
+export const BACKEND_URL = 'https://app-router-api.vercel.app/api';
