@@ -7,7 +7,7 @@ import { useSelectedLayoutSegment } from 'next/navigation';
 import { MenuAlt2Icon, XIcon } from '@heroicons/react/solid';
 import clsx from 'clsx';
 import { useState } from 'react';
-import Byline from './byline';
+import TeamCard from './team-card';
 
 const users: { name: string }[] = [
   {
@@ -95,7 +95,7 @@ export function GlobalNav() {
           })}
         </nav>
 
-        <Byline className="absolute hidden sm:block" />
+        <TeamCard className="absolute hidden sm:block" />
       </div>
     </div>
   );
