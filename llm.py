@@ -190,7 +190,7 @@ relevant_threads_schema = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "thread_id": {"type": "number"},
+                    "thread_id": {"type": "string"},
                     "evidence_synthesis": {"type": "string"},
                 },
             },

@@ -185,17 +185,19 @@ class ThreadQueryResp(BaseModel):
 
 
 @router.post("/query-threads")
-@modal_stub.function()
-@web_endpoint(method="POST")
+# @modal_stub.function()
+# @web_endpoint(method="POST")
 async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
     """Queries threads and returns top 5 results"""
 
     prompt = data.prompt
     user_id = data.user_id
     # https://stackoverflow.com/questions/12437849/how-to-query-an-element-from-a-list-in-pymongo
-    recs = thread.find({"user_ids": {"$in": [user_id]}})
+    recs = [x async for x in thread.find({"user_ids": {"$in": [user_id]}})]
     user = await slack_client.users_info(user=user_id)
     user_name = user.data["user"]["name"]
+    if not recs:
+        return []
     summary = await synthesize_threads_jsonformer(
         user_name,
         prompt,
@@ -207,7 +209,7 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
                     for x in rec["messages"]
                 ],
             }
-            async for rec in recs
+            for rec in recs
         ]
     )
     base_url = "https://performanceaigroup.slack.com/archives/"
@@ -220,5 +222,5 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
             # https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082273157719?thread_ts=1693082233.454459&cid=C05PGS91WNS
             thread_link=f"{base_url}{x['channel']}/p{x['slack_thread_id'].replace('.', '')}"
         )
-        for x in summary
+        for x in summary["threads"]
     ]
