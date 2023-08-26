@@ -3,6 +3,8 @@ import uvicorn
 from fastapi import FastAPI
 from modal import asgi_app
 import modal
+from fastapi.middleware.cors import CORSMiddleware
+from modal import Image, asgi_app
 
 from src.fastapi import router
 from src.config import modal_stub as stub, image
@@ -10,6 +12,13 @@ from src.config import modal_stub as stub, image
 web_app = FastAPI()
 
 web_app.include_router(router)
+web_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @stub.function(image=image, secret=modal.Secret.from_name("envs"))

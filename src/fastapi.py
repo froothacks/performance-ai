@@ -82,7 +82,7 @@ async def get_all_users() -> list[User]:
     ]
 
 
-thread = db.test_thread_1
+thread = db.thread  # collection
 
 
 async def embed(text: str) -> list[float]:
@@ -142,14 +142,7 @@ async def slack_webhook(request: Request):
     user_name = user.data["user"]["name"]
     text = event["text"]
 
-    # relevant = filter_thread(user_name, text)
-    # if not relevant:
-    #     return ""
-
-    rec = await thread.find_one(
-        {"slack_thread_id": event["thread_ts"]},
-    )
-    if rec is None:
+    if event.get("thread_ts") is None or event["thread_ts"] == event["event_ts"]:
         await thread.insert_one(
             {
                 "slack_thread_id": event["event_ts"],
@@ -157,7 +150,6 @@ async def slack_webhook(request: Request):
                 "channel": event["channel"],
                 "messages": [
                     {
-                        "id": event["client_msg_id"],
                         "text": text,
                         "user_id": user_id,
                         "name": user_name,
@@ -166,21 +158,22 @@ async def slack_webhook(request: Request):
             }
         )
     else:
+        rec = await thread.find_one({"slack_thread_id": event["thread_ts"]})
+        filter_push = {
+            "messages": {
+                "text": text,
+                "user_id": user_id,
+                "name": user_name,
+            },
+        }
+        update = {"$push": filter_push}
+        if rec["user_ids"] is None:
+            update["$set"] = {"user_ids": [user_id]}
+        elif user_id not in rec["user_ids"]:
+            filter_push["user_ids"] = user_id
         await thread.update_one(
             {"slack_thread_id": event["thread_ts"]},
-            {
-                "$push": {
-                    "user_ids": [user_id],
-                    "messages": [
-                        {
-                            "id": event["client_msg_id"],
-                            "text": text,
-                            "user_id": user_id,
-                            "name": user_name,
-                        }
-                    ],
-                }
-            },
+            update,
         )
 
     return ""
@@ -197,7 +190,7 @@ class ThreadQueryResp(BaseModel):
     thread_link: str
 
 
-@router.post("/query-threads")
+# @router.post("/query-threads")
 @modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
 @web_endpoint(method="POST")
 async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
@@ -206,9 +199,11 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
     prompt = data.prompt
     user_id = data.user_id
     # https://stackoverflow.com/questions/12437849/how-to-query-an-element-from-a-list-in-pymongo
-    recs = thread.find({"user_ids": {"$in": [user_id]}})
+    recs = [x async for x in thread.find({"user_ids": {"$in": [user_id]}})]
     user = await slack_client.users_info(user=user_id)
     user_name = user.data["user"]["name"]
+    if not recs:
+        return []
     summary = await synthesize_threads_jsonformer(
         user_name,
         prompt,
@@ -217,7 +212,7 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
                 "thread_id": rec["slack_thread_id"],
                 "messages": [(x["name"], x["text"]) for x in rec["messages"]],
             }
-            async for rec in recs
+            for rec in recs
         ],
     )
     base_url = "https://performanceaigroup.slack.com/archives/"
@@ -230,5 +225,5 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
             # https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082273157719?thread_ts=1693082233.454459&cid=C05PGS91WNS
             thread_link=f"{base_url}{x['channel']}/p{x['slack_thread_id'].replace('.', '')}",
         )
-        for x in summary
+        for x in summary["threads"]
     ]

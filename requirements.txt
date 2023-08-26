@@ -13,6 +13,9 @@ numpy
 anthropic==0.2.9
 motor
 
+# jsonformer_claude
+termcolor
+
 # Local
 black
 isort
