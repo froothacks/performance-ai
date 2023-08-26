@@ -104,16 +104,16 @@ def filter_thread(name: str, thread: dict) -> bool:
         name=name,
         thread=format_thread(thread),
     )
-    anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
+    anthropic = Client(api_key=ANTHROPIC_API_KEY)
     response = None
     attempts = 0
     while attempts <= 3:
-        completion = anthropic.completions.create(
+        completion = anthropic.completion(
             model="claude-2",
             max_tokens_to_sample=300,
             prompt=f"{HUMAN_PROMPT} {human_prompt}{AI_PROMPT}",
         )
-        response = completion.completion
+        response = completion["completion"]
         if response.strip().lower() == "yes":
             # If it ever identifies a thread as relevant, we can stop asking
             # Otherwise, we'll try again :D
@@ -153,8 +153,8 @@ Do not respond with anything but the thread ID and a one-sentence explanation.""
 
 
 def synthesize_threads(name, review, threads) -> dict:
-    anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
-    completion = anthropic.completions.create(
+    anthropic = Client(api_key=ANTHROPIC_API_KEY)
+    completion = anthropic.completion(
         model="claude-2",
         max_tokens_to_sample=300,
         prompt=f"""{HUMAN_PROMPT} {synthesize_template.format(
@@ -164,7 +164,7 @@ def synthesize_threads(name, review, threads) -> dict:
             schema=synth_schema,
         )}{AI_PROMPT}""",
     )
-    response = completion.completion.strip()
+    response = completion["completion"].strip()
 
     if not response or response.lower() == "none":
         return []
