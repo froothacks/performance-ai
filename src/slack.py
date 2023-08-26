@@ -47,64 +47,66 @@ try:
 except SlackApiError as e:
     logger.error("Error creating conversation: {}".format(e))
 
+
+
 ### BOLT FOR PYTHON
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 
-# from slack_bolt import App
+# # from slack_bolt import App
 
-# # export SLACK_SIGNING_SECRET=***
-# # export SLACK_BOT_TOKEN=xoxb-***
-# app = App()
+# # # export SLACK_SIGNING_SECRET=***
+# # # export SLACK_BOT_TOKEN=xoxb-***
+# # app = App()
 
-# # Add functionality here
+# # # Add functionality here
 
+# # if __name__ == "__main__":
+# #     app.start(3000)  # POST http://localhost:3000/slack/events
+
+# import os
+
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
+
+# # -----------------------------
+# #  Bolt app
+# # -----------------------------
+
+# from slack_bolt.async_app import AsyncApp
+
+# app = AsyncApp(
+#     token=os.environ["SLACK_BOT_TOKEN"],
+#     signing_secret=os.environ["SLACK_SIGNING_SECRET"],
+# )
+
+# @app.event("app_mention")
+# async def hello(event, say):
+#     await say(f"Hey <@{event['user']}>!")
+
+# # -----------------------------
+# #  Web app & server
+# # -----------------------------
+
+# import uvicorn
+# from fastapi import FastAPI, Request, Response
+# from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
+
+# api = FastAPI()
+# handler = AsyncSlackRequestHandler(app)
+
+# @api.get("/")
+# async def root(req: Request):
+#     return Response(status_code=200, content="OK")
+
+# @api.post("/slack/events")
+# async def slack_events(req: Request):
+#     return await handler.handle(req)
+
+# # python3 app.py
 # if __name__ == "__main__":
-#     app.start(3000)  # POST http://localhost:3000/slack/events
-
-import os
-
-import logging
-logging.basicConfig(level=logging.DEBUG)
-
-# -----------------------------
-#  Bolt app
-# -----------------------------
-
-from slack_bolt.async_app import AsyncApp
-
-app = AsyncApp(
-    token=os.environ["SLACK_BOT_TOKEN"],
-    signing_secret=os.environ["SLACK_SIGNING_SECRET"],
-)
-
-@app.event("app_mention")
-async def hello(event, say):
-    await say(f"Hey <@{event['user']}>!")
-
-# -----------------------------
-#  Web app & server
-# -----------------------------
-
-import uvicorn
-from fastapi import FastAPI, Request, Response
-from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
-
-api = FastAPI()
-handler = AsyncSlackRequestHandler(app)
-
-@api.get("/")
-async def root(req: Request):
-    return Response(status_code=200, content="OK")
-
-@api.post("/slack/events")
-async def slack_events(req: Request):
-    return await handler.handle(req)
-
-# python3 app.py
-if __name__ == "__main__":
-    uvicorn.run(
-        "app:api",
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8000)),
-    )
+#     uvicorn.run(
+#         "app:api",
+#         host="0.0.0.0",
+#         port=int(os.environ.get("PORT", 8000)),
+#     )
