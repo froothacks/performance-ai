@@ -19,16 +19,6 @@ threads = [
             ("Elliot", "sounds good"),
             ("Advait", "I tested it out, it's not working"),
             ("Elliot", "oh, I'll take a look"),
-            ("Advait", "thanks"),
-            ("Elliot", "I fixed it, it should work now"),
-            ("Advait", "thanks, it works now"),
-            ("Elliot", "great"),
-            ("Advait", "I have another question"),
-            ("Elliot", "sry just a sec"),
-            ("Advait", "no worries"),
-            ("Elliot", "what's up?"),
-            ("Advait", "I'm having trouble with Feature C"),
-            ("Elliot", "sry IDK"),
         ],
     },
     {
@@ -55,6 +45,18 @@ threads = [
     },
 ]
 
+import os
+import dotenv
+
+dotenv.load_dotenv()
+
+import asyncio
+import anthropic
+from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
+from jsonformer_claude.main import JsonformerClaude
+
+ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
+
 
 def format_thread(thread):
     messages = "\n".join(
@@ -63,42 +65,40 @@ def format_thread(thread):
     return f"Thread {thread['thread_id']}:\n{messages}\n"
 
 
-import os
+def format_threads(threads):
+    return "\n\n".join([format_thread(thread) for thread in threads])
 
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
-
-import asyncio
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
-import anthropic
 
 filter_template = """
 {thread}
 
-I am writing a performance review for {name}. I want to note that {review}.
+I am writing a performance review for {name}. I might want to cite this Slack thread as evidence.
 
-Does this thread provide any evidence for that?
+For example, I might want to comment on {name}'s communication skills or attention to deadlines.
+
+Would this Slack thread be relevant for my performance review?
+
+If the Slack thread contains evidence that {name} is a good or bad employee in some way, respond with "yes".
 
 You MUST respond with only "yes" or "no", nothing else. Do not response with anything but "yes" or "no".
 """
 
-human_prompt = filter_template.format(
-    name="Elliot",
-    review="Elliot is inconsistent with deadlines",
-    thread=format_thread(threads[0]),
-)
 
-# anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
-# completion = anthropic.completions.create(
-#     model="claude-2",
-#     max_tokens_to_sample=300,
-#     prompt=f"{HUMAN_PROMPT} {human_prompt}{AI_PROMPT}",
-# )
-# print(completion.completion)
+def filter_thread(name: str, thread: dict):
+    human_prompt = filter_template.format(
+        name=name,
+        thread=format_thread(thread),
+    )
+    anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
+    completion = anthropic.completions.create(
+        model="claude-2",
+        max_tokens_to_sample=300,
+        prompt=f"{HUMAN_PROMPT} {human_prompt}{AI_PROMPT}",
+    )
+    print(completion.completion)
 
 
-def format_threads(threads):
-    return "\n\n".join([format_thread(thread) for thread in threads])
-
+filter_thread("Elliot", threads[0])
 
 synthesize_template = """
 {threads}
@@ -114,16 +114,12 @@ Respond exactly according to the following format.
 {schema}
 
 For example:
-1: Elliot initially said that Feature A would be ready EOD yesterday, but it was actually ready EOD today.
+1: Elliot initially said that Feature A would be ready yesterday, but it was actually ready today.
 
 You must not prefix the thread ID with anything, including "thread".
 Do not respond with anything but the thread ID and a one-sentence explanation.
 """
 
-
-from jsonformer_claude.main import JsonformerClaude
-
-anthropic = anthropic.Client(api_key=ANTHROPIC_API_KEY)
 
 relevant_threads_schema = {
     "title": "Relevant Evidence Threads Schema",
@@ -142,36 +138,39 @@ relevant_threads_schema = {
     },
 }
 
-# gen_json = JsonformerClaude(
-#     anthropic_client=anthropic,
-#     json_schema=relevant_threads_schema,
-#     prompt=synthesize_template.format(
-#         name="Elliot",
-#         review="Elliot is inconsistent with deadlines",
-#         threads=format_threads(threads),
-#     ),
-#     debug=True,
-# )
+
+def synthesize_threads(name, review, threads):
+    # anthropic = anthropic.Client(api_key=ANTHROPIC_API_KEY)
+    anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
+    completion = anthropic.completions.create(
+        model="claude-2",
+        max_tokens_to_sample=300,
+        prompt=f"""{HUMAN_PROMPT} {synthesize_template.format(
+            name=name,
+            review=review,
+            threads=format_threads(threads),
+            schema="thread_id: 1-sentence explanation",
+        )}{AI_PROMPT}""",
+    )
+    print(completion.completion)
+
+    # gen_json = JsonformerClaude(
+    #     anthropic_client=anthropic,
+    #     json_schema=relevant_threads_schema,
+    #     prompt=synthesize_template.format(
+    #         name="Elliot",
+    #         review="Elliot is inconsistent with deadlines",
+    #         threads=format_threads(threads),
+    #     ),
+    #     debug=True,
+    # )
+
+    # async def complete():
+    #     res = await gen_json()
+    #     print(res)
+
+    # # Run the event loop
+    # asyncio.run(complete())
 
 
-# async def complete():
-#     res = await gen_json()
-#     print(res)
-
-
-# # Run the event loop
-# asyncio.run(complete())
-
-
-anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
-completion = anthropic.completions.create(
-    model="claude-2",
-    max_tokens_to_sample=300,
-    prompt=f"""{HUMAN_PROMPT} {synthesize_template.format(
-        name="Elliot",
-        review="Elliot is acting as a corporate spy for a competitor",
-        threads=format_threads(threads),
-        schema="thread_id: 1-sentence explanation",
-    )}{AI_PROMPT}""",
-)
-print(completion.completion)
+# synthesize_threads("Elliot", "Elliot is inconsistent with deadlines", threads)
