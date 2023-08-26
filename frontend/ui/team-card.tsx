@@ -1,6 +1,6 @@
 import { VercelLogo } from '#/ui/vercel-logo';
 
-export default function Byline({ className }: { className: string }) {
+export default function TeamCard({ className }: { className: string }) {
   return (
     <div
       className={`${className} bg-vc-border-gradient inset-x-0 bottom-3 mx-3 rounded-lg p-px shadow-lg shadow-black/20`}
