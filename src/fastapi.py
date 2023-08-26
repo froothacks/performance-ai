@@ -1,13 +1,14 @@
 from typing import TypedDict
 from itertools import islice
+import modal
 
 import numpy as np
 from fastapi import APIRouter, Request
 from modal import web_endpoint
 from pydantic import BaseModel
 
-from llm import synthesize_threads_jsonformer
-from .config import modal_stub, slack_client, db, co
+from .llm import filter_thread, synthesize_threads_jsonformer
+from .config import modal_stub, slack_client, db, co, image
 
 
 router = APIRouter()
@@ -94,7 +95,7 @@ def batched(iterable, n):
     """Batch data into tuples of length n. The last batch may be shorter."""
     # batched('ABCDEFG', 3) --> ABC DEF G
     if n < 1:
-        raise ValueError('n must be at least one')
+        raise ValueError("n must be at least one")
     it = iter(iterable)
     while batch := tuple(islice(it, n)):
         yield batch
@@ -105,7 +106,9 @@ def average_embeddings(
 ) -> list[float | int]:
     # https://github.com/openai/openai-cookbook/blob/main/examples/Embedding_long_inputs.ipynb
     chunk_embeddings = np.average(embeddings, axis=0, weights=chunk_lengths)
-    chunk_embeddings = chunk_embeddings / np.linalg.norm(chunk_embeddings)  # normalizes length to 1
+    chunk_embeddings = chunk_embeddings / np.linalg.norm(
+        chunk_embeddings
+    )  # normalizes length to 1
     return chunk_embeddings.tolist()
 
 
@@ -138,6 +141,10 @@ async def slack_webhook(request: Request):
     user = await slack_client.users_info(user=user_id)
     user_name = user.data["user"]["name"]
     text = event["text"]
+
+    # relevant = filter_thread(user_name, text)
+    # if not relevant:
+    #     return ""
 
     rec = await thread.find_one(
         {"slack_thread_id": event["thread_ts"]},
@@ -173,7 +180,7 @@ async def slack_webhook(request: Request):
                         }
                     ],
                 }
-            }
+            },
         )
 
     return ""
@@ -191,7 +198,7 @@ class ThreadQueryResp(BaseModel):
 
 
 @router.post("/query-threads")
-@modal_stub.function()
+@modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
 @web_endpoint(method="POST")
 async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
     """Queries threads and returns top 5 results"""
@@ -208,13 +215,10 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
         [
             {
                 "thread_id": rec["slack_thread_id"],
-                "messages": [
-                    (x["name"], x["text"])
-                    for x in rec["messages"]
-                ],
+                "messages": [(x["name"], x["text"]) for x in rec["messages"]],
             }
             async for rec in recs
-        ]
+        ],
     )
     base_url = "https://performanceaigroup.slack.com/archives/"
     return [
@@ -224,7 +228,7 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
             # https://performanceaigroup.slack.com/archives/C05Q1UNAY5P/p1693081393304879
             # https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082233454459
             # https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082273157719?thread_ts=1693082233.454459&cid=C05PGS91WNS
-            thread_link=f"{base_url}{x['channel']}/p{x['slack_thread_id'].replace('.', '')}"
+            thread_link=f"{base_url}{x['channel']}/p{x['slack_thread_id'].replace('.', '')}",
         )
         for x in summary
     ]

@@ -5,7 +5,8 @@ from jsonformer_claude.fields.base import FieldResponse
 from jsonformer_claude.fields.bool import BoolField
 from jsonformer_claude.fields.integer import IntField
 from jsonformer_claude.fields.string import StrField
-from termcolor import cprint
+
+# from termcolor import cprint
 import json
 
 FIELDS = {"number": IntField, "boolean": BoolField, "string": StrField}
@@ -40,8 +41,9 @@ class JsonformerClaude:
                 # cprint(value, "yellow")
                 pass
             else:
-                cprint(caller, "green", end=" ")
-                cprint(value, "blue")
+                # cprint(caller, "green", end=" ")
+                # cprint(value, "blue")
+                pass
 
     async def _completion(self, prompt: str):
         self.debug("[completion] hitting anthropic", prompt)

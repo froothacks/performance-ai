@@ -11,6 +11,7 @@ uvicorn
 asgiref
 numpy
 anthropic==0.2.9
+motor
 
 # Local
 black

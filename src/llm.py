@@ -59,10 +59,12 @@ threads = [
 ]
 
 import os
-import dotenv
 
-dotenv.load_dotenv()
+# import dotenv
 
+# dotenv.load_dotenv()
+
+import anthropic
 import asyncio
 from anthropic import HUMAN_PROMPT, AI_PROMPT
 
@@ -70,7 +72,7 @@ from anthropic import HUMAN_PROMPT, AI_PROMPT
 from anthropic import Client
 from jsonformer_claude.main import JsonformerClaude
 
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 
 def format_thread(thread):
