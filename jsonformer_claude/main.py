@@ -46,17 +46,14 @@ class JsonformerClaude:
     async def _completion(self, prompt: str):
         self.debug("[completion] hitting anthropic", prompt)
         self.last_anthropic_response_finished = False
-        stream = self.anthropic_client.completions.create(
-            max_tokens_to_sample=300,
+        stream = await self.anthropic_client.acompletion_stream(
             prompt=prompt,
             stop_sequences=[anthropic.HUMAN_PROMPT],
-            model="claude-2",
-            stream=True,
             **self.claude_args,
         )
         self.llm_request_count += 1
-        for response in stream:
-            self.last_anthropic_response = prompt + response.completion
+        async for response in stream:
+            self.last_anthropic_response = prompt + response["completion"]
             assistant_index = self.last_anthropic_response.find(anthropic.AI_PROMPT)
             if assistant_index > -1:
                 self.last_anthropic_response = self.strip_json_spaces(
@@ -130,12 +127,7 @@ class JsonformerClaude:
 
         stream = self.last_anthropic_response
 
-        try:
-            stream_matches = not await self.prefix_matches(progress) or stream is None
-        except StopAsyncIteration:
-            stream_matches = False
-
-        if stream_matches:
+        if not await self.prefix_matches(progress) or stream is None:
             stream = self.completion(prompt)
         else:
             stream = self.last_anthropic_stream
@@ -245,7 +237,7 @@ class JsonformerClaude:
                 # todo: below is untested since we do not support top level arrays yet
                 stream = self.completion(self.get_prompt())
                 async for response in stream:
-                    completion = response[len(self.get_progress(skip=True)) :]
+                    completion = response[len(self.get_progress()) :]
                     if completion and completion[0] == ",":
                         self.last_anthropic_response = completion[1:]
                         break
@@ -283,20 +275,18 @@ class JsonformerClaude:
             index += 1
         return json_string
 
-    def get_progress(self, skip=False):
+    def get_progress(self):
         progress = json.dumps(self.value, separators=(",", ":"))
         gen_marker_index = progress.find(f'"{self.generation_marker}"')
         if gen_marker_index != -1:
             progress = progress[:gen_marker_index]
-        elif skip:
-            pass  # progress = progress
         else:
             raise ValueError("Failed to find generation marker")
         return self.strip_json_spaces(progress)
 
     def get_prompt(self):
         template = """{HUMAN}{prompt}\nOutput result in the following JSON schema format:\n{schema}{AI}{progress}"""
-        progress = self.get_progress(skip=True)
+        progress = self.get_progress()
         prompt = template.format(
             prompt=self.prompt,
             schema=json.dumps(self.json_schema),
