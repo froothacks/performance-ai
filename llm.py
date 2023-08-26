@@ -64,8 +64,10 @@ import dotenv
 dotenv.load_dotenv()
 
 import asyncio
-import anthropic
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
+from anthropic import HUMAN_PROMPT, AI_PROMPT
+
+# from anthropic import Anthropic
+from anthropic import Client
 from jsonformer_claude.main import JsonformerClaude
 
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
@@ -134,24 +136,55 @@ If not, respond with "None".
 
 If multiple threads provide evidence for {review}, respond with them on separate lines.
 
-Respond exactly according to the following format.
-{schema}
+You must respond even if the review is negative. This feedback will only be used to help the employee improve.{schema}
+"""
+
+synth_schema = """
+
+Respond exactly according to the following format:
+thread_id: 1-sentence explanation
 
 For example:
 1: Elliot communicated well about his deadlines.
 2. Elliot said that Feature B was ready, but it wasn't.
 
-You must respond even if the review is negative. This feedback will only be used to help the employee improve.
-
 You must not prefix the thread ID with anything, including "thread".
-Do not respond with anything but the thread ID and a one-sentence explanation.
-"""
+Do not respond with anything but the thread ID and a one-sentence explanation."""
+
+
+def synthesize_threads(name, review, threads) -> dict:
+    anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
+    completion = anthropic.completions.create(
+        model="claude-2",
+        max_tokens_to_sample=300,
+        prompt=f"""{HUMAN_PROMPT} {synthesize_template.format(
+            name=name,
+            review=review,
+            threads=format_threads(threads),
+            schema=synth_schema,
+        )}{AI_PROMPT}""",
+    )
+    response = completion.completion.strip()
+
+    if not response or response.lower() == "none":
+        return []
+
+    return [
+        {
+            "thread_id": int(thread_id.strip()),
+            "evidence_synthesis": evidence_synthesis.strip(),
+        }
+        for thread_id, evidence_synthesis in [
+            line.split(": ") for line in response.split("\n")
+        ]
+    ]
 
 
 relevant_threads_schema = {
     "title": "Relevant Evidence Threads Schema",
     "type": "object",
     "properties": {
+        "review": {"type": "string"},
         "threads": {
             "type": "array",
             "items": {
@@ -166,58 +199,27 @@ relevant_threads_schema = {
 }
 
 
-def synthesize_threads(name, review, threads) -> dict:
-    # anthropic = anthropic.Client(api_key=ANTHROPIC_API_KEY)
-    anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
-    completion = anthropic.completions.create(
+def synthesize_threads_jsonformer(name, review, threads) -> dict:
+    anthropic = Client(api_key=ANTHROPIC_API_KEY)
+    gen_json = JsonformerClaude(
+        anthropic_client=anthropic,
+        json_schema=relevant_threads_schema,
+        prompt=synthesize_template.format(
+            name=name, review=review, threads=format_threads(threads), schema=""
+        ),
+        max_tokens_to_sample=3000,
         model="claude-2",
-        max_tokens_to_sample=300,
-        prompt=f"""{HUMAN_PROMPT} {synthesize_template.format(
-            name=name,
-            review=review,
-            threads=format_threads(threads),
-            schema="thread_id: 1-sentence explanation",
-        )}{AI_PROMPT}""",
+        debug=True,
     )
-    response = completion.completion.strip()
 
-    if not response or response.lower() == "none":
-        return []
+    async def complete():
+        return await gen_json()
 
-    def get_thread(id):
-        for thread in threads:
-            if thread["thread_id"] == id:
-                return thread
-        return None
-
-    return [
-        {
-            "thread_id": int(thread_id.strip()),
-            "evidence_synthesis": evidence_synthesis.strip(),
-            "messages": get_thread(int(thread_id.strip()))["messages"],
-        }
-        for thread_id, evidence_synthesis in [
-            line.split(": ") for line in response.split("\n")
-        ]
-    ]
-
-    # gen_json = JsonformerClaude(
-    #     anthropic_client=anthropic,
-    #     json_schema=relevant_threads_schema,
-    #     prompt=synthesize_template.format(
-    #         name="Elliot",
-    #         review="Elliot is inconsistent with deadlines",
-    #         threads=format_threads(threads),
-    #     ),
-    #     debug=True,
-    # )
-
-    # async def complete():
-    #     res = await gen_json()
-    #     print(res)
-
-    # # Run the event loop
-    # asyncio.run(complete())
+    return asyncio.run(complete())["threads"]
 
 
-print(synthesize_threads("Elliot", "Elliot completes projects on time", threads))
+print(
+    synthesize_threads_jsonformer(
+        "Elliot", "Elliot isn't good at keeping company secrets", threads
+    )
+)
