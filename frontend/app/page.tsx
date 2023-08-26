@@ -7,7 +7,7 @@ export default function Page() {
       <h1 className="text-xl font-medium text-gray-300">Examples</h1>
 
       <div className="space-y-10 text-white">
-        {demos.map((section) => {
+        {/* {demos.map((section) => {
           return (
             <div key={section.name} className="space-y-5">
               <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -37,7 +37,7 @@ export default function Page() {
               </div>
             </div>
           );
-        })}
+        })} */}
       </div>
     </div>
   );
