@@ -11,29 +11,6 @@ import { getUsers } from '#/app/api/users/getUsers';
 import { User } from '#/app/api/users/user';
 import { useUserProvider } from '#/app/contexts/user-context';
 
-const TEST_USERS: User[] = [
-  {
-    name: 'John',
-    id: 1,
-    profile_pic: '',
-  },
-  {
-    name: 'Sarah',
-    id: 1,
-    profile_pic: '',
-  },
-  {
-    name: 'David',
-    id: 1,
-    profile_pic: '',
-  },
-  {
-    name: 'Jessica',
-    id: 1,
-    profile_pic: '',
-  },
-];
-
 const nameToSlug = (name: string) => name.toLowerCase().split(' ').join('-');
 
 export function GlobalNav() {
@@ -46,8 +23,6 @@ export function GlobalNav() {
     const fetchUsers = async () => {
       // const data = await getUsers();
       // setUsers(data);
-
-      setUsers(TEST_USERS);
     };
     fetchUsers();
   }, []);
@@ -119,7 +94,6 @@ function GlobalNavItem({
   close: () => false | void;
 }) {
   const segment = useSelectedLayoutSegment();
-  console.log({ segment });
   const slug = nameToSlug(item.name);
   const isActive = slug === segment;
   const route = `/people/${slug}`;
