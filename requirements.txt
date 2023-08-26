@@ -12,6 +12,9 @@ asgiref
 numpy
 anthropic==0.2.9
 
+# jsonformer_claude
+termcolor
+
 # Local
 black
 isort

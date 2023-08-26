@@ -81,7 +81,7 @@ async def get_all_users() -> list[User]:
     ]
 
 
-thread = db.test_thread_1
+thread = db.thread  # collection
 
 
 async def embed(text: str) -> list[float]:
@@ -139,10 +139,7 @@ async def slack_webhook(request: Request):
     user_name = user.data["user"]["name"]
     text = event["text"]
 
-    rec = await thread.find_one(
-        {"slack_thread_id": event["thread_ts"]},
-    )
-    if rec is None:
+    if event.get("thread_ts") is None or event["thread_ts"] == event["event_ts"]:
         await thread.insert_one(
             {
                 "slack_thread_id": event["event_ts"],
@@ -150,7 +147,6 @@ async def slack_webhook(request: Request):
                 "channel": event["channel"],
                 "messages": [
                     {
-                        "id": event["client_msg_id"],
                         "text": text,
                         "user_id": user_id,
                         "name": user_name,
@@ -159,21 +155,19 @@ async def slack_webhook(request: Request):
             }
         )
     else:
+        rec = await thread.find_one({"slack_thread_id": event["thread_ts"]})
+        filter_push = {
+            "messages": {
+                "text": text,
+                "user_id": user_id,
+                "name": user_name,
+            },
+        }
+        if user_id not in rec["user_ids"]:
+            filter_push["user_ids"] = user_id
         await thread.update_one(
             {"slack_thread_id": event["thread_ts"]},
-            {
-                "$push": {
-                    "user_ids": [user_id],
-                    "messages": [
-                        {
-                            "id": event["client_msg_id"],
-                            "text": text,
-                            "user_id": user_id,
-                            "name": user_name,
-                        }
-                    ],
-                }
-            }
+            {"$push": filter_push},
         )
 
     return ""
