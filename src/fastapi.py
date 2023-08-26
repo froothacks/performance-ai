@@ -163,11 +163,14 @@ async def slack_webhook(request: Request):
                 "name": user_name,
             },
         }
-        if user_id not in rec["user_ids"]:
+        update = {"$push": filter_push}
+        if rec["user_ids"] is None:
+            update["$set"] = {"user_ids": [user_id]}
+        elif user_id not in rec["user_ids"]:
             filter_push["user_ids"] = user_id
         await thread.update_one(
             {"slack_thread_id": event["thread_ts"]},
-            {"$push": filter_push},
+            update,
         )
 
     return ""
