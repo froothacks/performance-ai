@@ -1,24 +1,24 @@
 'use client';
 
 import React from 'react';
-import { Sources } from '../api/sources/source';
+import { SourceMap } from '../api/sources/source';
 import { useLocalStorage } from 'usehooks-ts';
 
 const SourceContext = React.createContext<
-  [Sources, React.Dispatch<React.SetStateAction<Sources>>] | undefined
+  [SourceMap, React.Dispatch<React.SetStateAction<SourceMap>>] | undefined
 >(undefined);
 
 export function SourceProvider({ children }: { children: React.ReactNode }) {
-  const [sources, setSources] = useLocalStorage<Sources>('sources', []);
+  const [sourceMap, setSourceMap] = useLocalStorage<SourceMap>('sources', {});
 
   return (
-    <SourceContext.Provider value={[sources, setSources]}>
+    <SourceContext.Provider value={[sourceMap, setSourceMap]}>
       {children}
     </SourceContext.Provider>
   );
 }
 
-export function useSourceContext() {
+export function useSourceProvider() {
   const context = React.useContext(SourceContext);
   if (context === undefined) {
     throw new Error('useSourceContext must be used within a SourceProvider');

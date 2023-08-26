@@ -4,6 +4,7 @@ import TeamCard from '#/ui/team-card';
 import { GlobalNav } from '#/ui/global-nav';
 import { Metadata } from 'next';
 import { UserProvider } from './contexts/user-context';
+import { SourceProvider } from './contexts/source-context';
 
 export const metadata: Metadata = {
   title: {
@@ -32,19 +33,20 @@ export default function RootLayout({
     <html lang="en" className="[color-scheme:dark]">
       <body className="bg-gray-1100 overflow-y-scroll bg-[url('/grid.svg')] pb-36">
         <UserProvider>
-          <GlobalNav />
-
-          <div className="lg:pl-72">
-            <div className="mx-auto max-w-4xl space-y-8 px-2 pt-20 lg:px-8 lg:py-8">
-              <div className="bg-vc-border-gradient rounded-lg p-px shadow-lg shadow-black/20">
-                <div className="rounded-lg bg-black">
-                  <SearchBar />
+          <SourceProvider>
+            <GlobalNav />
+            <div className="lg:pl-72">
+              <div className="mx-auto max-w-4xl space-y-8 px-2 pt-20 lg:px-8 lg:py-8">
+                <div className="bg-vc-border-gradient rounded-lg p-px shadow-lg shadow-black/20">
+                  <div className="rounded-lg bg-black">
+                    <SearchBar />
+                  </div>
                 </div>
+                {children}
+                <TeamCard className="fixed sm:hidden" />
               </div>
-              {children}
-              <TeamCard className="fixed sm:hidden" />
             </div>
-          </div>
+          </SourceProvider>
         </UserProvider>
       </body>
     </html>
