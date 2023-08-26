@@ -77,8 +77,9 @@ async def get_slack_users():
     return data
 
 
-@modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
-@web_endpoint(method="GET")
+@router.get("/all-users")
+# @modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
+# @web_endpoint(method="GET")
 async def all_users() -> list[User]:
     """Gets all slack users
     https://api.slack.com/methods/users.list
@@ -119,8 +120,7 @@ def average_embeddings(
     return chunk_embeddings.tolist()
 
 
-@modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
-@web_endpoint(method="POST")
+@router.post("/slack-webhook")
 async def slack_webhook(request: Request):
     """
     Processes Slack messages and stores in MongoDB
@@ -145,11 +145,16 @@ async def slack_webhook(request: Request):
     if event["type"] != "message":
         return ""
 
-    user_id = event["user"]
     if event["channel"] != "C05PGS91WNS":
         return ""
     if event.get("subtype") == "channel_join":
         return ""
+    try:
+        user_id = event["user"]
+    except KeyError:
+        print("KeyError", event)
+        return ""
+
     users = await get_slack_users()
     user_name = next(x["name"] for x in users["members"] if x["id"] == user_id)
     text = event["text"]
