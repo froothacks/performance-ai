@@ -5,6 +5,9 @@ python-dotenv==1.0.0
 fastapi==0.102.0
 pydantic
 pymongo
+slack_sdk==3.21.3
+jinja2
+uvicorn
 
 # Local
 black
