@@ -154,7 +154,7 @@ You must not prefix the thread ID with anything, including "thread".
 Do not respond with anything but the thread ID and a one-sentence explanation."""
 
 
-def synthesize_threads(name, review, threads) -> dict:
+def _synthesize_threads(name, review, threads) -> dict:
     anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
     completion = anthropic.completions.create(
         model="claude-2",
@@ -180,6 +180,17 @@ def synthesize_threads(name, review, threads) -> dict:
             line.split(": ") for line in response.split("\n")
         ]
     ]
+
+
+def synthesize_threads(name, review, threads):
+    # try _synthesize threads 3 times and return [] if it fails
+    attempts = 0
+    while attempts <= 3:
+        try:
+            return _synthesize_threads(name, review, threads)
+        except:
+            attempts += 1
+    return []
 
 
 relevant_threads_schema = {
