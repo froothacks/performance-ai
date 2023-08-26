@@ -144,6 +144,9 @@ async def slack_webhook(request: Request):
     user_name = user.data["user"]["name"]
     text = event["text"]
 
+    if not filter_thread(user_name, event):
+        return ""
+
     if event.get("thread_ts") is None or event["thread_ts"] == event["event_ts"]:
         await thread.insert_one(
             {
