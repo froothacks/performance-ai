@@ -1,19 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SourcesMap } from '../api/sources/source';
 import { useLocalStorage } from 'usehooks-ts';
-import { DEFAULT_SOURCE_MAP } from '../api/constants';
 
 const SourceContext = React.createContext<
   [SourcesMap, React.Dispatch<React.SetStateAction<SourcesMap>>] | undefined
 >(undefined);
 
 export function SourceProvider({ children }: { children: React.ReactNode }) {
-  const [sourcesMap, setSourcesMap] = useLocalStorage<SourcesMap>(
-    'sources',
-    DEFAULT_SOURCE_MAP,
-  );
+  const [sourcesMap, setSourcesMap] = useState<SourcesMap>({} as SourcesMap);
 
   return (
     <SourceContext.Provider value={[sourcesMap, setSourcesMap]}>

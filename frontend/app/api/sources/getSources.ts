@@ -24,9 +24,10 @@ export async function generateSources(userId: number, prompt: string) {
   console.log({ sources });
 
   if (sources.length === 0) {
+    // console.log('Nothing');
     // Render the closest `not-found.js` Error Boundary
-    notFound();
+    // notFound();
   }
 
-  return sources;
+  return { threads: sources };
 }

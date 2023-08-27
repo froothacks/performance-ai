@@ -7,14 +7,20 @@ const PerformanceSourceCard = ({ sources }: { sources: Sources }) => (
     <h1 className="mb-6 text-xl font-medium text-gray-400">{sources.query}</h1>
 
     <div className="grid grid-cols-1 gap-6">
-      {sources.threads.map((source, i) => (
-        <Boundary size="small" labels={[`Thread ${source.thread_id}`]}>
-          <p className="mb-4 text-sm font-medium text-gray-400">
-            {source.summarized}
-          </p>
-          <ExternalLink href={source.thread_link}>Slack</ExternalLink>
-        </Boundary>
-      ))}
+      {sources.threads.length
+        ? sources.threads.map((source, i) => (
+            <Boundary
+              size="small"
+              labels={[`Thread ${source.thread_id}`]}
+              key={i}
+            >
+              <p className="mb-4 text-sm font-medium text-gray-400">
+                {source.summarized}
+              </p>
+              <ExternalLink href={source.thread_link}>Slack</ExternalLink>
+            </Boundary>
+          ))
+        : 'Nothing found. Try another search.'}
     </div>
   </div>
 );
@@ -75,11 +81,18 @@ export default function Page({ params }: { params: { user: string } }) {
     const sources = await generateSources(user.id, prompt);
     console.log({ sources });
     // saveSourceMap({ ...sourceMap, [user.id]: [...sourcesList, sources] });
-    console.log({ answer: sourceMap?.[user.id] });
+    // console.log({ answer: sourceMap?.[user.id] });
     // Save to sources
+    // if (sources.threads.length === 0) {
+    //   return;
+    // }
+    saveSourceMap({
+      ...sourceMap,
+      [user.id]: [{ query: prompt, threads: sources.threads }, ...sourcesList],
+    });
   };
 
-  console.log({ user });
+  // console.log({ user });
   return (
     <>
       <div className="bg-vc-border-gradient rounded-lg p-px shadow-lg shadow-black/20">
@@ -87,8 +100,11 @@ export default function Page({ params }: { params: { user: string } }) {
           <SearchBar onSubmit={onSubmit} />
         </div>
       </div>
-      {sourcesList.map((sources) => (
-        <div className="mb-6 space-y-9 rounded-lg bg-black p-3.5 lg:p-6">
+      {sourcesList.map((sources, i) => (
+        <div
+          className="mb-6 space-y-9 rounded-lg bg-black p-3.5 lg:p-6"
+          key={i}
+        >
           <PerformanceSourceCard sources={sources} />
         </div>
       ))}
