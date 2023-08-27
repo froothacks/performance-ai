@@ -1,23 +1,24 @@
 'use client';
 
-import { SkeletonCard } from '#/ui/skeleton-card';
-
-const PerformanceSourceCard = ({ sources }: { sources: Sources }) => (
-  <div className="space-y-4">
-    <h1 className="mb-6 text-xl font-medium text-gray-400">{sources.query}</h1>
-
-    <div className="grid grid-cols-1 gap-6">
-      {sources.threads.map((source, i) => (
-        <Boundary size="small" labels={[`Thread ${source.thread_id}`]}>
-          <p className="mb-4 text-sm font-medium text-gray-400">
-            {source.summarized}
-          </p>
-          <ExternalLink href={source.thread_link}>Slack</ExternalLink>
-        </Boundary>
-      ))}
+const PerformanceSourceCard = ({ sources }: { sources: Sources }) => {
+  return (
+    <div className="space-y-4">
+      <h1 className="mb-6 text-xl font-medium text-gray-400">
+        {sources.query}
+      </h1>
+      <div className="grid grid-cols-1 gap-6">
+        {sources.threads.map((source, i) => (
+          <Boundary size="small" labels={[`Thread ${source.thread_id}`]}>
+            <p className="mb-4 text-sm font-medium text-gray-400">
+              {source.summarized}
+            </p>
+            <ExternalLink href={source.thread_link}>Slack</ExternalLink>
+          </Boundary>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const SearchIconSVG = () => (
   <svg
@@ -74,12 +75,17 @@ export default function Page({ params }: { params: { user: string } }) {
     console.log({ prompt });
     const sources = await generateSources(user.id, prompt);
     console.log({ sources });
-    // saveSourceMap({ ...sourceMap, [user.id]: [...sourcesList, sources] });
+    saveSourceMap({
+      ...sourceMap,
+      [user.id]: [...sourcesList, { query: prompt, threads: sources }],
+    });
     console.log({ answer: sourceMap?.[user.id] });
     // Save to sources
   };
 
+  const reversed = Array.from(sourcesList).reverse();
   console.log({ user });
+
   return (
     <>
       <div className="bg-vc-border-gradient rounded-lg p-px shadow-lg shadow-black/20">

@@ -84,58 +84,58 @@ const SOURCES = [
       },
     ],
   },
-  {
-    query: 'Advait cares about what is best for the company',
-    threads: [
-      {
-        summarized:
-          'Advait pushes back against a fake demo to prop up sales, saying that it goes against their values.',
-        thread_id: '1693089016455669',
-        thread_link:
-          'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693089016455669',
-      },
-      {
-        summarized:
-          'Advait helps improve the onboarding process for engineers by suggesting a new idea.',
-        thread_id: '1693079827092389',
-        thread_link:
-          'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693079827092389',
-      },
-      {
-        summarized:
-          'Advait takes the time to explain a complicated concept to a junior engineer, walking through it step by step.',
-        thread_id: '1693088646583389',
-        thread_link:
-          'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693088646583389',
-      },
-    ],
-  },
-  {
-    query: 'Lisa is very organized.',
-    threads: [
-      {
-        summarized:
-          'Lisa does a great job of leading meetings and summarizes the meeting afterwards, with takeaways',
-        thread_id: '1693080406262219',
-        thread_link:
-          'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693080406262219',
-      },
-      {
-        summarized:
-          'Lisa proactively brings up a feature that might be delayed so they can tackle it ahead of time.',
-        thread_id: '1693091110054049',
-        thread_link:
-          'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693091110054049',
-      },
-      {
-        summarized:
-          'Lisa approaches a design feasibility discussion in a thoughtful, organized manner interacting with the engineer in a great way.',
-        thread_id: '1693082484621449g',
-        thread_link:
-          'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082484621449g',
-      },
-    ],
-  },
+  // {
+  //   query: 'Advait cares about what is best for the company',
+  //   threads: [
+  //     {
+  //       summarized:
+  //         'Advait pushes back against a fake demo to prop up sales, saying that it goes against their values.',
+  //       thread_id: '1693089016455669',
+  //       thread_link:
+  //         'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693089016455669',
+  //     },
+  //     {
+  //       summarized:
+  //         'Advait helps improve the onboarding process for engineers by suggesting a new idea.',
+  //       thread_id: '1693079827092389',
+  //       thread_link:
+  //         'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693079827092389',
+  //     },
+  //     {
+  //       summarized:
+  //         'Advait takes the time to explain a complicated concept to a junior engineer, walking through it step by step.',
+  //       thread_id: '1693088646583389',
+  //       thread_link:
+  //         'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693088646583389',
+  //     },
+  //   ],
+  // },
+  // {
+  //   query: 'Lisa is very organized.',
+  //   threads: [
+  //     {
+  //       summarized:
+  //         'Lisa does a great job of leading meetings and summarizes the meeting afterwards, with takeaways',
+  //       thread_id: '1693080406262219',
+  //       thread_link:
+  //         'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693080406262219',
+  //     },
+  //     {
+  //       summarized:
+  //         'Lisa proactively brings up a feature that might be delayed so they can tackle it ahead of time.',
+  //       thread_id: '1693091110054049',
+  //       thread_link:
+  //         'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693091110054049',
+  //     },
+  //     {
+  //       summarized:
+  //         'Lisa approaches a design feasibility discussion in a thoughtful, organized manner interacting with the engineer in a great way.',
+  //       thread_id: '1693082484621449g',
+  //       thread_link:
+  //         'https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082484621449g',
+  //     },
+  //   ],
+  // },
 ];
 
 export const DEFAULT_SOURCE_MAP: SourcesMap = {
