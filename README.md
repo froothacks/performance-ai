@@ -6,7 +6,7 @@ Introducing... Evidence360 - an AI-powered tool to assist you with your performa
 
 ### Diving into the Tech
 
-Behind the scenes we're using Modal to host/deploy our backend endpoints, Vercel to deploy our frontend with Next.js (React app), MongoDB to persist all of our data and Anthropic's Claude LLM to do the heavy-lifting of processing Slack messages and figuring out what's relevant! 
+Behind the scenes we're using Modal to host/deploy our backend endpoints, Vercel to deploy our frontend with Next.js (React app), MongoDB to persist all of our data and Anthropic's Claude LLM to do the heavy-lifting of processing Slack messages and figuring out what's relevant! Check it out https://evidence360.vercel.app/
 
 ### Future Updates
 
