@@ -6,7 +6,7 @@ export async function getUsers() {
   const res = await fetch(`${BACKEND_URL}/all-users`, {
     headers: {
       'ngrok-skip-browser-warning': true,
-    },
+    } as any,
   });
 
   if (!res.ok) {

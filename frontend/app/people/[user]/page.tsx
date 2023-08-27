@@ -1,5 +1,15 @@
 'use client';
 
+import { Boundary } from '#/ui/boundary';
+import { ExternalLink } from '#/ui/external-link';
+
+import { useEffect, useState } from 'react';
+import { User } from '#/app/api/users/user';
+import { useUserProvider } from '#/app/contexts/user-context';
+import { useSourceProvider } from '#/app/contexts/source-context';
+import { Source, Sources, SourcesList } from '#/app/api/sources/source';
+import { generateSources } from '#/app/api/sources/getSources';
+
 const PerformanceSourceCard = ({ sources }: { sources: Sources }) => {
   return (
     <div className="space-y-4">
@@ -8,7 +18,11 @@ const PerformanceSourceCard = ({ sources }: { sources: Sources }) => {
       </h1>
       <div className="grid grid-cols-1 gap-6">
         {sources.threads.map((source, i) => (
-          <Boundary size="small" labels={[`Thread ${source.thread_id}`]}>
+          <Boundary
+            key={i}
+            size="small"
+            labels={[`Thread ${source.thread_id}`]}
+          >
             <p className="mb-4 text-sm font-medium text-gray-400">
               {source.summarized}
             </p>
@@ -37,7 +51,7 @@ const SearchIconSVG = () => (
   </svg>
 );
 
-export function SearchBar({
+function SearchBar({
   onSubmit,
 }: {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -71,6 +85,7 @@ export default function Page({ params }: { params: { user: string } }) {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // @ts-ignore
     const prompt = e.target['search'].value;
     console.log({ prompt });
     const sources = await generateSources(user.id, prompt);
@@ -83,7 +98,6 @@ export default function Page({ params }: { params: { user: string } }) {
     // Save to sources
   };
 
-  const reversed = Array.from(sourcesList).reverse();
   console.log({ user });
 
   return (
@@ -93,44 +107,14 @@ export default function Page({ params }: { params: { user: string } }) {
           <SearchBar onSubmit={onSubmit} />
         </div>
       </div>
-      {sourcesList.map((sources) => (
-        <div className="mb-6 space-y-9 rounded-lg bg-black p-3.5 lg:p-6">
+      {sourcesList.map((sources, i) => (
+        <div
+          key={i}
+          className="mb-6 space-y-9 rounded-lg bg-black p-3.5 lg:p-6"
+        >
           <PerformanceSourceCard sources={sources} />
         </div>
       ))}
     </>
   );
 }
-
-import { ExternalLink } from '#/ui/external-link';
-import { Boundary } from '#/ui/boundary';
-import { useEffect, useState } from 'react';
-import { User } from '#/app/api/users/user';
-import { useUserProvider } from '#/app/contexts/user-context';
-import { useSourceProvider } from '#/app/contexts/source-context';
-import { Source, Sources, SourcesList } from '#/app/api/sources/source';
-import { generateSources } from '#/app/api/sources/getSources';
-
-// export default function Page() {
-//   return (
-//     <div className="prose prose-sm prose-invert max-w-none">
-//       <h1 className="text-xl font-bold">Layouts</h1>
-
-//       <ul>
-//         <li>
-//           A layout is UI that is shared between multiple pages. On navigation,
-//           layouts preserve state, remain interactive, and do not re-render. Two
-//           or more layouts can also be nested.
-//         </li>
-//         <li>Try navigating between categories and sub categories.</li>
-//       </ul>
-
-//       <div className="flex gap-2">
-//         {/* TODO: Pass down slack link */}
-//         <ExternalLink href="/">
-//           Slack
-//         </ExternalLink>
-//       </div>
-//     </div>
-//   );
-// }

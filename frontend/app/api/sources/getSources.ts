@@ -8,7 +8,7 @@ export async function generateSources(userId: number, prompt: string) {
     headers: {
       'ngrok-skip-browser-warning': true,
       'Content-Type': 'application/json',
-    },
+    } as any,
     method: 'POST',
     body: JSON.stringify({ user_id: userId, prompt: prompt }),
   });
