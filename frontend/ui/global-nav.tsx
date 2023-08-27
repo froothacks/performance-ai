@@ -40,7 +40,7 @@ export function GlobalNav() {
           </div>
 
           <h3 className="font-semibold tracking-wide text-gray-400 group-hover:text-gray-50">
-            Performance AI
+            Evidence360
           </h3>
         </Link>
       </div>

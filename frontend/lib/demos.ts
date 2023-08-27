@@ -4,10 +4,6 @@ export type Item = {
   description?: string;
 };
 
-export type User = {
-  name: string;
-}
-
 export const demos: { name: string; items: Item[] }[] = [
   {
     name: 'People',

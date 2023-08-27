@@ -4,7 +4,10 @@ export type Source = {
   thread_link: string;
 };
 
-export type Sources = Source[];
+export type Sources = {
+  query: string;
+  threads: Source[];
+};
 
 export type SourcesList = Sources[];
 

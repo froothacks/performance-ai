@@ -4,13 +4,15 @@ import { SkeletonCard } from '#/ui/skeleton-card';
 
 const PerformanceSourceCard = ({ sources }: { sources: Sources }) => (
   <div className="space-y-4">
-    <h1 className="text-xl font-medium text-gray-400/80">QUERY</h1>
+    <h1 className="mb-6 text-xl font-medium text-gray-400">{sources.query}</h1>
 
     <div className="grid grid-cols-1 gap-6">
-      {sources.map((source, i) => (
-        <Boundary labels={[`Evidence ${i + 1}`]}>
-          <SkeletonCard key={i} />
-          <ExternalLink href="/">Slack</ExternalLink>
+      {sources.threads.map((source, i) => (
+        <Boundary size="small" labels={[`Thread ${source.thread_id}`]}>
+          <p className="mb-4 text-sm font-medium text-gray-400">
+            {source.summarized}
+          </p>
+          <ExternalLink href={source.thread_link}>Slack</ExternalLink>
         </Boundary>
       ))}
     </div>
@@ -72,7 +74,8 @@ export default function Page({ params }: { params: { user: string } }) {
     console.log({ prompt });
     const sources = await generateSources(user.id, prompt);
     console.log({ sources });
-    saveSourceMap({ ...sourceMap, [user.id]: [...sourcesList, sources] });
+    // saveSourceMap({ ...sourceMap, [user.id]: [...sourcesList, sources] });
+    console.log({ answer: sourceMap?.[user.id] });
     // Save to sources
   };
 

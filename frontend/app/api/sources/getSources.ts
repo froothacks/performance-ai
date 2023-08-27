@@ -3,19 +3,6 @@ import { useSourceProvider } from '#/app/contexts/source-context';
 import { BACKEND_URL } from '../utils';
 import { Sources } from './source';
 
-export async function getSourcesForUser(userId: number) {
-  const [sourceMap] = useSourceProvider();
-
-  const sources = sourceMap?.[userId] ?? [];
-
-  if (sources.length === 0) {
-    // Render the closest `not-found.js` Error Boundary
-    notFound();
-  }
-
-  return sources;
-}
-
 export async function generateSources(userId: number, prompt: string) {
   const res = await fetch(`${BACKEND_URL}/query-threads`, {
     headers: {

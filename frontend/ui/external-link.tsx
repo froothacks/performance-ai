@@ -10,6 +10,7 @@ export const ExternalLink = ({
   return (
     <a
       href={href}
+      target={'_blank'}
       className="inline-flex gap-x-2 rounded-lg bg-gray-700 px-3 py-1 text-sm font-medium text-gray-100 no-underline hover:bg-gray-500 hover:text-white"
     >
       <div>{children}</div>
