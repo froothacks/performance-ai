@@ -10,7 +10,8 @@ jinja2
 uvicorn
 asgiref
 numpy
-anthropic==0.2.9
+anthropic
+motor
 
 # jsonformer_claude
 termcolor

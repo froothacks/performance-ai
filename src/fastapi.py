@@ -1,13 +1,15 @@
 from typing import TypedDict
 from itertools import islice
+import modal
+import contextvars
 
 import numpy as np
 from fastapi import APIRouter, Request
 from modal import web_endpoint
 from pydantic import BaseModel
 
-from llm import synthesize_threads_jsonformer
-from .config import modal_stub, slack_client, db, co
+from .llm import synthesize_threads, filter_thread
+from .config import modal_stub, slack_client, db, co, image
 
 
 router = APIRouter()
@@ -24,6 +26,9 @@ class User(BaseModel):
     id: str
     name: str
     profile_pic: str
+
+
+all_users = contextvars.ContextVar("all_users", default=None)
 
 
 async def get_slack_users():
@@ -66,12 +71,16 @@ async def get_slack_users():
         ok: bool
         members: list[GetAllUsersSlackRespMember]
 
+    if all_users.get() is not None:
+        return all_users.get()
     data: GetAllUsersSlackResp = (await slack_client.users_list()).data
     return data
 
 
 @router.get("/all-users")
-async def get_all_users() -> list[User]:
+# @modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
+# @web_endpoint(method="GET")
+async def all_users() -> list[User]:
     """Gets all slack users
     https://api.slack.com/methods/users.list
     """
@@ -81,7 +90,7 @@ async def get_all_users() -> list[User]:
     ]
 
 
-thread = db.thread  # collection
+thread = db.threads
 
 
 async def embed(text: str) -> list[float]:
@@ -94,7 +103,7 @@ def batched(iterable, n):
     """Batch data into tuples of length n. The last batch may be shorter."""
     # batched('ABCDEFG', 3) --> ABC DEF G
     if n < 1:
-        raise ValueError('n must be at least one')
+        raise ValueError("n must be at least one")
     it = iter(iterable)
     while batch := tuple(islice(it, n)):
         yield batch
@@ -105,7 +114,9 @@ def average_embeddings(
 ) -> list[float | int]:
     # https://github.com/openai/openai-cookbook/blob/main/examples/Embedding_long_inputs.ipynb
     chunk_embeddings = np.average(embeddings, axis=0, weights=chunk_lengths)
-    chunk_embeddings = chunk_embeddings / np.linalg.norm(chunk_embeddings)  # normalizes length to 1
+    chunk_embeddings = chunk_embeddings / np.linalg.norm(
+        chunk_embeddings
+    )  # normalizes length to 1
     return chunk_embeddings.tolist()
 
 
@@ -134,10 +145,22 @@ async def slack_webhook(request: Request):
     if event["type"] != "message":
         return ""
 
-    user_id = event["user"]
-    user = await slack_client.users_info(user=user_id)
-    user_name = user.data["user"]["name"]
+    if event["channel"] != "C05PGS91WNS":
+        return ""
+    if event.get("subtype") == "channel_join":
+        return ""
+    try:
+        user_id = event["user"]
+    except KeyError:
+        print("KeyError", event)
+        return ""
+
+    users = await get_slack_users()
+    user_name = next(x["name"] for x in users["members"] if x["id"] == user_id)
     text = event["text"]
+
+    if not filter_thread(user_name, event):
+        return ""
 
     if event.get("thread_ts") is None or event["thread_ts"] == event["event_ts"]:
         await thread.insert_one(
@@ -156,6 +179,8 @@ async def slack_webhook(request: Request):
         )
     else:
         rec = await thread.find_one({"slack_thread_id": event["thread_ts"]})
+        if rec is None:
+            return ""
         filter_push = {
             "messages": {
                 "text": text,
@@ -163,11 +188,12 @@ async def slack_webhook(request: Request):
                 "name": user_name,
             },
         }
+        update = {"$push": filter_push}
         if user_id not in rec["user_ids"]:
             filter_push["user_ids"] = user_id
         await thread.update_one(
             {"slack_thread_id": event["thread_ts"]},
-            {"$push": filter_push},
+            update,
         )
 
     return ""
@@ -185,7 +211,7 @@ class ThreadQueryResp(BaseModel):
 
 
 @router.post("/query-threads")
-# @modal_stub.function()
+# @modal_stub.function(image=image, secret=modal.Secret.from_name("envs"))
 # @web_endpoint(method="POST")
 async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
     """Queries threads and returns top 5 results"""
@@ -194,23 +220,20 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
     user_id = data.user_id
     # https://stackoverflow.com/questions/12437849/how-to-query-an-element-from-a-list-in-pymongo
     recs = [x async for x in thread.find({"user_ids": {"$in": [user_id]}})]
-    user = await slack_client.users_info(user=user_id)
-    user_name = user.data["user"]["name"]
+    users = await get_slack_users()
+    user_name = next(x["name"] for x in users["members"] if x["id"] == user_id)
     if not recs:
         return []
-    summary = await synthesize_threads_jsonformer(
+    summary = await synthesize_threads(
         user_name,
         prompt,
         [
             {
                 "thread_id": rec["slack_thread_id"],
-                "messages": [
-                    (x["name"], x["text"])
-                    for x in rec["messages"]
-                ],
+                "messages": [(x["name"], x["text"]) for x in rec["messages"]],
             }
             for rec in recs
-        ]
+        ],
     )
     base_url = "https://performanceaigroup.slack.com/archives/"
     return [
@@ -220,7 +243,7 @@ async def query_threads(data: ThreadQuery) -> list[ThreadQueryResp]:
             # https://performanceaigroup.slack.com/archives/C05Q1UNAY5P/p1693081393304879
             # https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082233454459
             # https://performanceaigroup.slack.com/archives/C05PGS91WNS/p1693082273157719?thread_ts=1693082233.454459&cid=C05PGS91WNS
-            thread_link=f"{base_url}{x['channel']}/p{x['slack_thread_id'].replace('.', '')}"
+            thread_link=f"{base_url}{x['channel']}/p{x['slack_thread_id'].replace('.', '')}",
         )
         for x in summary["threads"]
     ]
